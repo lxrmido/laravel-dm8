@@ -1,0 +1,27 @@
+{
+    "name": "lmo/laravel-dm8",
+    "autoload": {
+        "psr-4": {
+            "Lmo\\LaravelDm8\\": "src/"
+        },
+        "files": [
+            
+        ]
+    },
+    "authors": [
+        {
+            "name": "lxrmido",
+            "email": "lxrmido@lxrmido.com"
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Lmo\\LaravelDm8\\Dm8ServiceProvider"
+            ]
+        }
+    }
+}
