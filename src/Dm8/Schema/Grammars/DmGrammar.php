@@ -653,7 +653,7 @@ class DmGrammar extends Grammar
      */
     protected function typeBoolean(Fluent $column)
     {
-        return 'char(1)';
+        return 'tinyint';
     }
 
     /**
@@ -743,7 +743,7 @@ class DmGrammar extends Grammar
      */
     protected function typeUuid(Fluent $column)
     {
-        return 'char(36)';
+        return 'varchar(36)';
     }
 
     /**
