@@ -557,7 +557,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 10;
 
-        return "int({$length})";
+        return "int";
     }
 
     /**
@@ -570,7 +570,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 19;
 
-        return "bigint({$length})";
+        return "bigint";
     }
 
     /**
@@ -583,7 +583,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 7;
 
-        return "bigint({$length})";
+        return "bigint";
     }
 
     /**
@@ -596,7 +596,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 5;
 
-        return "smallint({$length})";
+        return "smallint";
     }
 
     /**
@@ -609,7 +609,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 3;
 
-        return "tinyint({$length})";
+        return "tinyint";
     }
 
     /**
