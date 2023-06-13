@@ -500,7 +500,7 @@ class DmGrammar extends Grammar
      */
     protected function typeString(Fluent $column)
     {
-        return "varchar2({$column->length})";
+        return "varchar({$column->length})";
     }
 
     /**
@@ -511,7 +511,7 @@ class DmGrammar extends Grammar
      */
     protected function typeNvarchar2(Fluent $column)
     {
-        return "nvarchar2({$column->length})";
+        return "nvarchar({$column->length})";
     }
 
     /**
@@ -557,7 +557,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 10;
 
-        return "number({$length},0)";
+        return "int({$length},0)";
     }
 
     /**
@@ -570,7 +570,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 19;
 
-        return "number({$length},0)";
+        return "bigint({$length},0)";
     }
 
     /**
@@ -583,7 +583,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 7;
 
-        return "number({$length},0)";
+        return "bigint({$length},0)";
     }
 
     /**
@@ -596,7 +596,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 5;
 
-        return "number({$length},0)";
+        return "smallint({$length},0)";
     }
 
     /**
@@ -609,7 +609,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 3;
 
-        return "number({$length},0)";
+        return "tinyint({$length},0)";
     }
 
     /**
@@ -642,7 +642,7 @@ class DmGrammar extends Grammar
      */
     protected function typeDecimal(Fluent $column)
     {
-        return "number({$column->total}, {$column->places})";
+        return "decimal({$column->total}, {$column->places})";
     }
 
     /**
@@ -666,7 +666,7 @@ class DmGrammar extends Grammar
     {
         $length = ($column->length) ? $column->length : 255;
 
-        return "varchar2({$length})";
+        return "varchar({$length})";
     }
 
     /**
