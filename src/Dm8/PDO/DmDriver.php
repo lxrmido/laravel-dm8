@@ -56,12 +56,12 @@ class DmDriver implements \Doctrine\DBAL\Driver
 
     public function getDatabasePlatform()
     {
-        return new \Doctrine\DBAL\Platforms\DmPlatform();
+        return new DmPlatform();
     }
 
     public function getSchemaManager(\Doctrine\DBAL\Connection $conn)
     {
-        return new \Doctrine\DBAL\Schema\DmManager($conn);
+        return new DmSchemaManager($conn);
     }
 
     public function getName()
