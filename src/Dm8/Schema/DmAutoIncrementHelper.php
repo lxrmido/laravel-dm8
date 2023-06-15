@@ -94,8 +94,7 @@ echo "createAutoIncrementObjects: $sequenceName, $triggerName\n";
      */
     private function createObjectName($prefix, $table, $col, $type)
     {
-        // max object name length is 50 chars
-        return substr($prefix.$table.'_'.$col.'_'.$type, 0, 100);
+        return substr($prefix.$table.'_'.$col.'_'.$type, 0, 128);
     }
 
     /**

@@ -59,19 +59,19 @@ class DmBlueprint extends Blueprint
         $index = str_replace(['-', '.'], '_', $index);
 
         //shorten the name if it is longer than 30 chars
-        while (strlen($index) > 30) {
-            $parts = explode('_', $index);
+        // while (strlen($index) > 30) {
+        //     $parts = explode('_', $index);
 
-            for ($i = 0; $i < count($parts); $i++) {
-                //if any part is longer than 2 chars, take one off
-                $len = strlen($parts[$i]);
-                if ($len > 2) {
-                    $parts[$i] = substr($parts[$i], 0, $len - 1);
-                }
-            }
+        //     for ($i = 0; $i < count($parts); $i++) {
+        //         //if any part is longer than 2 chars, take one off
+        //         $len = strlen($parts[$i]);
+        //         if ($len > 2) {
+        //             $parts[$i] = substr($parts[$i], 0, $len - 1);
+        //         }
+        //     }
 
-            $index = implode('_', $parts);
-        }
+        //     $index = implode('_', $parts);
+        // }
 
         return $index;
     }
