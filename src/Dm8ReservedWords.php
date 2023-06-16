@@ -728,7 +728,7 @@ trait Dm8ReservedWords
     ];
 
     /**
-     * Check if value is an Oracle reserved word.
+     * Check if value is an Dm8 reserved word.
      *
      * @param  string  $value
      * @return bool
@@ -738,6 +738,11 @@ trait Dm8ReservedWords
         return in_array(Str::upper(trim($value)), $this->reserves, true);
     }
 
+
+    /**
+     * Get Dm8 reserved words.
+     * @return array
+     */
     public function getReserveds() {
         return $this->reserves;
     }
