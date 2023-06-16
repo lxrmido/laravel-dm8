@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use PDO;
 use PDOStatement;
 use Throwable;
-use Lmo\LaravelDm8\PDO\DmDriver;
+use Lmo\LaravelDm8\DBAL\DmDriver;
 use Lmo\LaravelDm8\Query\Grammars\DmGrammar as QueryGrammar;
 use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
 use Lmo\LaravelDm8\Query\Processors\DmProcessor as Processor;
@@ -19,7 +19,7 @@ use Lmo\LaravelDm8\Schema\Grammars\DmGrammar as SchemaGrammar;
 use Lmo\LaravelDm8\Schema\DmBuilder as SchemaBuilder;
 use Lmo\LaravelDm8\Schema\Sequence;
 use Lmo\LaravelDm8\Schema\Trigger;
-use LaravelDm8\PDO\Dm8\Statement;
+use LaravelDm8\DBAL\Dm8\Statement;
 
 class Dm8Connection extends Connection
 {
