@@ -1,10 +1,10 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Schema;
+namespace Lmo\LaravelDm8\Schema;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Grammars\Grammar;
-use Lmo\LaravelDm8\Dm8\Dm8ReservedWords;
+use Lmo\LaravelDm8\Dm8ReservedWords;
 
 class Comment extends Grammar
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Schema;
+namespace Lmo\LaravelDm8\Schema;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;

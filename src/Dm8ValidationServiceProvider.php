@@ -1,9 +1,9 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8;
+namespace Lmo\LaravelDm8;
 
 use Illuminate\Validation\ValidationServiceProvider;
-use Lmo\LaravelDm8\Dm8\Validation\Dm8DatabasePresenceVerifier;
+use Lmo\LaravelDm8\Validation\Dm8DatabasePresenceVerifier;
 
 class Dm8ValidationServiceProvider extends ValidationServiceProvider
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8;
+namespace Lmo\LaravelDm8;
 
 use Doctrine\DBAL\Driver\OCI8\Driver as DoctrineDriver;
 use Doctrine\DBAL\Version;
@@ -11,14 +11,14 @@ use Illuminate\Support\Str;
 use PDO;
 use PDOStatement;
 use Throwable;
-use Lmo\LaravelDm8\Dm8\PDO\DmDriver;
-use Lmo\LaravelDm8\Dm8\Query\Grammars\DmGrammar as QueryGrammar;
-use Lmo\LaravelDm8\Dm8\Query\DmBuilder as QueryBuilder;
-use Lmo\LaravelDm8\Dm8\Query\Processors\DmProcessor as Processor;
-use Lmo\LaravelDm8\Dm8\Schema\Grammars\DmGrammar as SchemaGrammar;
-use Lmo\LaravelDm8\Dm8\Schema\DmBuilder as SchemaBuilder;
-use Lmo\LaravelDm8\Dm8\Schema\Sequence;
-use Lmo\LaravelDm8\Dm8\Schema\Trigger;
+use Lmo\LaravelDm8\PDO\DmDriver;
+use Lmo\LaravelDm8\Query\Grammars\DmGrammar as QueryGrammar;
+use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
+use Lmo\LaravelDm8\Query\Processors\DmProcessor as Processor;
+use Lmo\LaravelDm8\Schema\Grammars\DmGrammar as SchemaGrammar;
+use Lmo\LaravelDm8\Schema\DmBuilder as SchemaBuilder;
+use Lmo\LaravelDm8\Schema\Sequence;
+use Lmo\LaravelDm8\Schema\Trigger;
 use LaravelDm8\PDO\Dm8\Statement;
 
 class Dm8Connection extends Connection

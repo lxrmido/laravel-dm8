@@ -1,6 +1,6 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Connectors;
+namespace Lmo\LaravelDm8\Connectors;
 
 use Illuminate\Database\Connectors\Connector;
 use Illuminate\Database\Connectors\ConnectorInterface;

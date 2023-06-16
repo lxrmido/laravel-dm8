@@ -1,5 +1,5 @@
 <?php
-namespace Lmo\LaravelDm8\Dm8\PDO;
+namespace Lmo\LaravelDm8\PDO;
 
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Platforms\AbstractPlatform;

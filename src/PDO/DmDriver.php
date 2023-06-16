@@ -1,8 +1,8 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\PDO;
-use Lmo\LaravelDm8\Dm8\PDO\DmPlatform;
-use Lmo\LaravelDm8\Dm8\PDO\DmSchemaManager;
+namespace Lmo\LaravelDm8\PDO;
+use Lmo\LaravelDm8\PDO\DmPlatform;
+use Lmo\LaravelDm8\PDO\DmSchemaManager;
 
 // use Doctrine\DBAL\Driver\AbstractOracleDriver;
 // use Illuminate\Database\PDO\Concerns\ConnectsToDatabase;

@@ -1,13 +1,13 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Eloquent;
+namespace Lmo\LaravelDm8\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as IlluminateQueryBuilder;
-use Lmo\LaravelDm8\Dm8\Dm8Connection;
-use Lmo\LaravelDm8\Dm8\Query\Grammars\DmGrammar;
-use Lmo\LaravelDm8\Dm8\Query\DmBuilder as QueryBuilder;
+use Lmo\LaravelDm8\Dm8Connection;
+use Lmo\LaravelDm8\Query\Grammars\DmGrammar;
+use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
 
 class DmEloquent extends Model
 {

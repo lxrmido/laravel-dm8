@@ -1,6 +1,6 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8;
+namespace Lmo\LaravelDm8;
 
 use Illuminate\Support\Str;
 
@@ -130,6 +130,7 @@ trait Dm8ReservedWords
         'DISTRIBUTED',
         'DML',
         'DOUBLE',
+        'DOMAIN',
         'DROP',
         'DUMP',
         'EACH',

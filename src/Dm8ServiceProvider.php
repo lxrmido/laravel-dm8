@@ -1,12 +1,12 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8;
+namespace Lmo\LaravelDm8;
 
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
-use Lmo\LaravelDm8\Dm8\Auth\OracleUserProvider;
-use Lmo\LaravelDm8\Dm8\Connectors\DmConnector as Connector;
+use Lmo\LaravelDm8\Auth\OracleUserProvider;
+use Lmo\LaravelDm8\Connectors\DmConnector as Connector;
 
 class Dm8ServiceProvider extends ServiceProvider
 {

@@ -1,12 +1,12 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Query\Grammars;
+namespace Lmo\LaravelDm8\Query\Grammars;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Str;
-use Lmo\LaravelDm8\Dm8\Dm8ReservedWords;
+use Lmo\LaravelDm8\Dm8ReservedWords;
 
 class DmGrammar extends Grammar
 {

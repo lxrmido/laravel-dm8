@@ -1,11 +1,11 @@
 <?php
 
-namespace Lmo\LaravelDm8\Dm8\Schema;
+namespace Lmo\LaravelDm8\Schema;
 
 use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Builder;
-use Lmo\LaravelDm8\Dm8\Schema\DmBlueprint;
+use Lmo\LaravelDm8\Schema\DmBlueprint;
 
 class DmBuilder extends Builder
 {
