@@ -19,7 +19,7 @@ composer require lmo/laravel-dm8
 ],
 ```
 
-2. Change
+2. Change `DB_CONNECTION` in env to `dm`:
 
 ```
 DB_CONNECTION=dm
