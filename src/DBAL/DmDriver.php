@@ -18,13 +18,13 @@ class DmDriver implements \Doctrine\DBAL\Driver
     }
 
     /**
-     * Constructs the Oracle PDO DSN.
+     * Constructs the PDO DSN.
      *
      * @return string  The DSN.
      */
     private function _constructPdoDsn(array $params)
     {
-        $dsn = 'oci:';
+        $dsn = 'dm:';
         if (isset($params['host'])) {
             $dsn .= 'dbname=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)' .
             '(HOST=' . $params['host'] . ')';
@@ -32,7 +32,7 @@ class DmDriver implements \Doctrine\DBAL\Driver
             if (isset($params['port'])) {
                 $dsn .= '(PORT=' . $params['port'] . ')';
             } else {
-                $dsn .= '(PORT=1521)';
+                $dsn .= '(PORT=5236)';
             }
 
             if (isset($params['service']) && $params['service'] == true) {
