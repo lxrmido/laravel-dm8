@@ -18,3 +18,14 @@ composer require lmo/laravel-dm8
     ...
 ],
 ```
+
+2. Change
+
+```
+DB_CONNECTION=dm
+DB_HOST=127.0.0.1
+DB_PORT=5236
+DB_DATABASE=USER
+DB_USERNAME=USER
+DB_PASSWORD=PASS
+```
