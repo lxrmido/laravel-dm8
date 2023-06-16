@@ -20,7 +20,7 @@
         },
         "laravel": {
             "providers": [
-                "Lmo\\LaravelDm8\\Dm8\\Dm8ServiceProvider"
+                "Lmo\\LaravelDm8\\Dm8ServiceProvider"
             ]
         }
     }
