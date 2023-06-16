@@ -737,4 +737,8 @@ trait Dm8ReservedWords
     {
         return in_array(Str::upper(trim($value)), $this->reserves, true);
     }
+
+    public function getReserveds() {
+        return $this->reserves;
+    }
 }

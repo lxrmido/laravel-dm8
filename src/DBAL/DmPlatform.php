@@ -811,7 +811,7 @@ LEFT JOIN user_cons_columns r_cols
 
     protected function getReservedKeywordsClass()
     {
-        return 'Doctrine\DBAL\Platforms\Keywords\OracleKeywords';
+        return 'Lmo\LaravelDm8\DBAL\DmKeywords';
     }
 
     /**
