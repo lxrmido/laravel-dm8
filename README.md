@@ -6,7 +6,7 @@ DM8 database driver implementation for Laravel
 ## 安装
 
 ```shell
-composer require lmo/laravel-dm8 @dev
+composer require lmo/laravel-dm8
 ```
 
 ## 配置
