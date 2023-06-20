@@ -55,7 +55,7 @@ class DmBlueprint extends Blueprint
         $type = isset($short_type[$type]) ? $short_type[$type] : $type;
 
         if ($type != 'pk') {
-            $index = strtolower(implode('_', $columns).'_'.$type);
+            $index = strtolower($this->prefix . implode('_', $columns).'_'.$type);
         } else {
             $index = strtolower($this->prefix.$this->table.'_'.implode('_', $columns).'_'.$type);
         }
