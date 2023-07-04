@@ -598,6 +598,6 @@ class DmGrammar extends Grammar
      */
     public function getDateFormat()
     {
-        return 'Y-m-d H:i:s.000';
+        return 'Y-m-d H:i:s';
     }
 }
