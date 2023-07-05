@@ -5,7 +5,6 @@ namespace Lmo\LaravelDm8\Query\Grammars;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
-use Illuminate\Support\Str;
 use Lmo\LaravelDm8\Dm8ReservedWords;
 
 class DmGrammar extends Grammar
@@ -88,9 +87,9 @@ class DmGrammar extends Grammar
         // If an offset is present on the query, we will need to wrap the query in
         // a big "ANSI" offset syntax block. This is very nasty compared to the
         // other database systems but is necessary for implementing features.
-        if ($this->isPaginationable($query, $components)) {
-            return $this->compileAnsiOffset($query, $components);
-        }
+        //if ($this->isPaginationable($query, $components)) {
+        //    return $this->compileAnsiOffset($query, $components);
+        //}
 
         if ($query->unions) {
             $sql = $this->wrapUnion($sql).' '.$this->compileUnions($query);
@@ -118,27 +117,27 @@ class DmGrammar extends Grammar
      * @param  array  $components
      * @return string
      */
-    protected function compileAnsiOffset(Builder $query, $components)
-    {
-        // Improved response time with FIRST_ROWS(n) hint for ORDER BY queries
-        if ($query->getConnection()->getConfig('server_version') == '12c') {
-            $components['columns'] = str_replace('select', "select /*+ FIRST_ROWS({$query->limit}) */", $components['columns']);
-            $offset = $query->offset ?: 0;
-            $limit = $query->limit;
-            $components['limit'] = "offset $offset rows fetch next $limit rows only";
-
-            return $this->concatenate($components);
-        }
-
-        $constraint = $this->compileRowConstraint($query);
-
-        $sql = $this->concatenate($components);
-
-        // We are now ready to build the final SQL query so we'll create a common table
-        // expression from the query and get the records with row numbers within our
-        // given limit and offset value that we just put on as a query constraint.
-        return $this->compileTableExpression($sql, $constraint, $query);
-    }
+//    protected function compileAnsiOffset(Builder $query, $components)
+//    {
+//        // Improved response time with FIRST_ROWS(n) hint for ORDER BY queries
+//        if ($query->getConnection()->getConfig('server_version') == '12c') {
+//            $components['columns'] = str_replace('select', "select /*+ FIRST_ROWS({$query->limit}) */", $components['columns']);
+//            $offset = $query->offset ?: 0;
+//            $limit = $query->limit;
+//            $components['limit'] = "offset $offset rows fetch next $limit rows only";
+//
+//            return $this->concatenate($components);
+//        }
+//
+//        // $constraint = $this->compileRowConstraint($query);
+//
+//        $sql = $this->concatenate($components);
+//
+//        // We are now ready to build the final SQL query so we'll create a common table
+//        // expression from the query and get the records with row numbers within our
+//        // given limit and offset value that we just put on as a query constraint.
+//        return $this->compileTableExpression($sql, $constraint, $query);
+//    }
 
     /**
      * Compile the limit / offset row constraint for a query.
@@ -146,21 +145,32 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Database\Query\Builder  $query
      * @return string
      */
-    protected function compileRowConstraint($query)
-    {
-        $start = $query->offset + 1;
-        $finish = $query->offset + $query->limit;
-
-        if ($query->limit == 1 && is_null($query->offset)) {
-            return '= 1';
-        }
-
-        if ($query->offset && is_null($query->limit)) {
-            return ">= {$start}";
-        }
-
-        return "between {$start} and {$finish}";
-    }
+//    protected function compileRowConstraint($query)
+//    {
+//        $sql = "";
+//        if ($query->offset) {
+//            $sql .= " " . $this->compileOffset($query, $query->offset);
+//        }
+//        if ($query->limit) {
+//            $sql .= " " . $this->compileLimit($query, $query->limit);
+//        }
+//        return $sql;
+//
+//        /*
+//        $start = $query->offset + 1;
+//        $finish = $query->offset + $query->limit;
+//
+//        if ($query->limit == 1 && is_null($query->offset)) {
+//            return '= 1';
+//        }
+//
+//        if ($query->offset && is_null($query->limit)) {
+//            return ">= {$start}";
+//        }
+//
+//        return "between {$start} and {$finish}";
+//        */
+//    }
 
     /**
      * Compile a common table expression for a query.
@@ -271,7 +281,7 @@ class DmGrammar extends Grammar
             return $value;
         }
 
-        return '"'.str_replace('"', '""', $value).'"';
+        return '`'.str_replace('"', '""', $value).'`';
     }
 
     /**
@@ -458,30 +468,6 @@ class DmGrammar extends Grammar
             return 'for update';
         }
 
-        return '';
-    }
-
-    /**
-     * Compile the "limit" portions of the query.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  int  $limit
-     * @return string
-     */
-    protected function compileLimit(Builder $query, $limit)
-    {
-        return '';
-    }
-
-    /**
-     * Compile the "offset" portions of the query.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  int  $offset
-     * @return string
-     */
-    protected function compileOffset(Builder $query, $offset)
-    {
         return '';
     }
 
