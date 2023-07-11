@@ -69,7 +69,6 @@ class DmConnector extends Connector implements ConnectorInterface
         $config = $this->setPort($config);
         $config = $this->setTNS($config);
         $config = $this->setCharset($config);
-
         return $config;
     }
 
@@ -107,7 +106,11 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     protected function setTNS(array $config)
     {
-        $config['tns'] = "dm:host={$config['host']};dbname={$config['database']};port={$config['port']};";
+        // $config['tns'] = "dm:host={$config['host']};port={$config['port']};";
+
+        // @doc https://eco.dameng.com/document/dm/zh-cn/pm/go-rogramming-guide.html
+        $config["tns"] = sprintf("dm://%s:%s@%s:%d",
+            $config["username"], $config["password"], $config["host"], $config["port"]);
 
         return $config;
     }

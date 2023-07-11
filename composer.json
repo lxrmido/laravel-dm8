@@ -5,7 +5,7 @@
             "Lmo\\LaravelDm8\\": "src/"
         },
         "files": [
-            
+
         ]
     },
     "authors": [
@@ -14,6 +14,9 @@
             "email": "lxrmido@lxrmido.com"
         }
     ],
+    "required": {
+        "doctrine/dbal": "^3.6"
+    },
     "extra": {
         "branch-alias": {
             "dev-main": "1.0-dev"

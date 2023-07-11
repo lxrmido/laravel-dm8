@@ -1,74 +1,41 @@
 <?php
 
 namespace Lmo\LaravelDm8\DBAL;
-use Lmo\LaravelDm8\DBAL\DmPlatform;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\API\ExceptionConverter;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Lmo\LaravelDm8\DBAL\DmPlatformOld;
 use Lmo\LaravelDm8\DBAL\DmSchemaManager;
 
-class DmDriver implements \Doctrine\DBAL\Driver
+class DmDriver extends \Doctrine\DBAL\Driver\AbstractMySQLDriver
 {
-
-    public function connect(array $params, $username = null, $password = null, array $driverOptions = array())
+    private array $config;
+    public function __construct(array $config)
     {
-        return new \Doctrine\DBAL\Driver\PDOConnection(
-            $this->_constructPdoDsn($params),
-            $username,
-            $password,
-            $driverOptions
-        );
+        $this->config = $config;
     }
 
-    /**
-     * Constructs the PDO DSN.
-     *
-     * @return string  The DSN.
-     */
-    private function _constructPdoDsn(array $params)
+    public function connect(array $params)
     {
-        $dsn = 'dm:';
-        if (isset($params['host'])) {
-            $dsn .= 'dbname=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)' .
-            '(HOST=' . $params['host'] . ')';
-
-            if (isset($params['port'])) {
-                $dsn .= '(PORT=' . $params['port'] . ')';
-            } else {
-                $dsn .= '(PORT=5236)';
-            }
-
-            if (isset($params['service']) && $params['service'] == true) {
-                $dsn .= '))(CONNECT_DATA=(SERVICE_NAME=' . $params['dbname'] . ')))';
-            } else {
-                $dsn .= '))(CONNECT_DATA=(SID=' . $params['dbname'] . ')))';
-            }
-        } else {
-            $dsn .= 'dbname=' . $params['dbname'];
-        }
-
-        if (isset($params['charset'])) {
-            $dsn .= ';charset=' . $params['charset'];
-        }
-
-        return $dsn;
+        /** @var \PDO $pdo */
+        $pdo = $params["pdo"];
+        return new \Doctrine\DBAL\Driver\PDO\Connection($pdo);
     }
 
     public function getDatabasePlatform()
     {
-        return new DmPlatform();
+        return new DmPlatform($this->config);
     }
 
-    public function getSchemaManager(\Doctrine\DBAL\Connection $conn)
+    public function getSchemaManager(Connection $conn, AbstractPlatform $platform)
     {
-        return new DmSchemaManager($conn);
+        $sm = new DmSchemaManager($conn, $this->getDatabasePlatform());
+        $sm->setConfig($this->config);
+        return $sm;
     }
 
-    public function getName()
+    public function getExceptionConverter(): ExceptionConverter
     {
-        return 'dm';
-    }
-
-    public function getDatabase(\Doctrine\DBAL\Connection $conn)
-    {
-        $params = $conn->getParams();
-        return $params['dbname'];
+        return new DmExceptionConverter();
     }
 }

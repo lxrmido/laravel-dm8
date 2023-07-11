@@ -1,10 +1,23 @@
 <?php
 namespace Lmo\LaravelDm8\DBAL;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\MariaDb1027Platform;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 
 class DmSchemaManager extends AbstractSchemaManager
 {
+    private array $config;
+
+    public function __construct(Connection $connection, AbstractPlatform $platform)
+    {
+        parent::__construct($connection, $platform);
+    }
+
     protected function _getPortableViewDefinition($view)
     {
         $view = \array_change_key_case($view, CASE_LOWER);
@@ -162,7 +175,6 @@ class DmSchemaManager extends AbstractSchemaManager
             'precision'  => $precision,
             'scale'      => $scale,
             'comment'       => (isset($tableColumn['comments'])) ? $tableColumn['comments'] : null,
-            'platformDetails' => array(),
         );
 
         return new \Doctrine\DBAL\Schema\Column($tableColumn['column_name'], \Doctrine\DBAL\Types\Type::getType($type), $options);
@@ -256,5 +268,15 @@ class DmSchemaManager extends AbstractSchemaManager
         $this->dropAutoincrement($name);
 
         return parent::dropTable($name);
+    }
+
+    public function setConfig(array $config)
+    {
+        $this->config = $config;
+    }
+
+    private function getDatabase(string $methodName): string
+    {
+        return $this->config["database"];
     }
 }

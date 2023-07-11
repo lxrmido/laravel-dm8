@@ -3,12 +3,27 @@ namespace Lmo\LaravelDm8\DBAL;
 
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use \Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 /**
  * DmPlatform.
  *
  */
-class DmPlatform extends AbstractPlatform
+class DmPlatform extends AbstractMySQLPlatform
 {
+    /**
+     * @param array $config
+     */
+    private $config;
+
+    public function __construct(array $config)
+    {
+        $this->config = $config;
+    }
+
+    public function getCurrentDatabaseExpression(): string {
+        return sprintf("'%s' as `database`", $this->config["database"]);
+    }
+
     /**
      * return string to call a function to get a substring inside an SQL statement
      *
@@ -290,12 +305,6 @@ class DmPlatform extends AbstractPlatform
             : ($length ? 'VARCHAR2(' . $length . ')' : 'VARCHAR2(4000)');
     }
 
-    /** @override */
-    public function getClobTypeDeclarationSQL(array $field)
-    {
-        return 'CLOB';
-    }
-
     public function getListDatabasesSQL()
     {
         return 'SELECT username FROM all_users';
@@ -449,7 +458,7 @@ END;';
         return $sql;
     }
 
-    public function getListTableForeignKeysSQL($table)
+    public function getListTableForeignKeysSQL($table, $database = null)
     {
         $table = strtoupper($table);
 
@@ -579,7 +588,7 @@ LEFT JOIN user_cons_columns r_cols
             }
         }
         if (count($fields)) {
-            $sql[] = 'ALTER TABLE ' . $diff->name . ' MODIFY (' . implode(', ', $fields) . ')';
+            $sql[] = 'ALTER TABLE `' . $diff->name . '` MODIFY (' . implode(', ', $fields) . ')';
         }
 
         foreach ($diff->renamedColumns as $oldColumnName => $column) {
@@ -609,7 +618,8 @@ LEFT JOIN user_cons_columns r_cols
                 $sql[] = 'ALTER TABLE ' . $diff->name . ' RENAME TO ' . $diff->newName;
             }
 
-            $sql = array_merge($sql, $this->_getAlterTableIndexForeignKeySQL($diff), $commentsSQL);
+            // $sql = array_merge($sql, $this->_getAlterTableIndexForeignKeySQL($diff), $commentsSQL);
+            $sql = array_merge($sql, $commentsSQL);
         }
 
         return array_merge($sql, $tableSql, $columnSql);
@@ -764,7 +774,8 @@ LEFT JOIN user_cons_columns r_cols
      */
     public function getDummySelectSQL()
     {
-        return 'SELECT 1 FROM DUAL';
+        // return 'SELECT 1 FROM DUAL';
+        return "select ".$this->getCurrentDatabaseExpression();
     }
 
     protected function initializeDoctrineTypeMappings()
@@ -817,8 +828,30 @@ LEFT JOIN user_cons_columns r_cols
     /**
      * Gets the SQL Snippet used to declare a BLOB column type.
      */
-    public function getBlobTypeDeclarationSQL(array $field)
+    public function getBlobTypeDeclarationSQL(array $column)
     {
         return 'BLOB';
+    }
+
+    /** @override */
+    public function getClobTypeDeclarationSQL(array $column)
+    {
+        if (! empty($column['length']) && is_numeric($column['length'])) {
+            $length = $column['length'];
+
+            if ($length <= static::LENGTH_LIMIT_TINYTEXT) {
+                return 'TINYTEXT';
+            }
+
+            if ($length <= static::LENGTH_LIMIT_TEXT) {
+                return 'TEXT';
+            }
+
+            if ($length <= static::LENGTH_LIMIT_MEDIUMTEXT) {
+                return 'MEDIUMTEXT';
+            }
+        }
+
+        return 'LONGTEXT';
     }
 }

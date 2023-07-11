@@ -2,6 +2,7 @@
 
 namespace Lmo\LaravelDm8;
 
+use Doctrine\DBAL\Connection as DoctrineConnection;
 use Doctrine\DBAL\Driver\OCI8\Driver as DoctrineDriver;
 use Doctrine\DBAL\Version;
 use Exception;
@@ -199,12 +200,36 @@ class Dm8Connection extends Connection
     /**
      * Get doctrine driver.
      *
-     * @return Oci8Driver
+     * @return DmDriver
      */
     protected function getDoctrineDriver()
     {
         // return class_exists(Version::class) ? new DoctrineDriver : new DmDriver();
-        return new DmDriver();
+        return new DmDriver($this->config);
+    }
+
+    /**
+     * Get the Doctrine DBAL database connection instance.
+     *
+     * @return \Doctrine\DBAL\Connection
+     */
+    public function getDoctrineConnection() {
+        if (is_null($this->doctrineConnection)) {
+            $driver = $this->getDoctrineDriver();
+
+            $this->doctrineConnection = new DBAL\Dm8DoctrineConnection($this->config, array_filter([
+                'pdo' => $this->getPdo(),
+                'dbname' => $this->getDatabaseName(),
+                'driver' => method_exists($driver, 'getName') ? $driver->getName() : null,
+                'serverVersion' => $this->getConfig('server_version'),
+            ]), $driver);
+        }
+
+        return $this->doctrineConnection;
+    }
+
+    public function getDatabase() {
+        return $this->config["database"];
     }
 
     /**
@@ -492,5 +517,11 @@ class Dm8Connection extends Connection
         foreach ($bindings as $key => $value) {
             $statement->bindValue(is_string($key) ? $key : $key + 1, $value);
         }
+    }
+
+    public function getDoctrineSchemaManager()
+    {
+        $platform = $this->getDoctrineDriver()->getDatabasePlatform();
+        return $this->getDoctrineDriver()->getSchemaManager($this->getDoctrineConnection(), $platform);
     }
 }

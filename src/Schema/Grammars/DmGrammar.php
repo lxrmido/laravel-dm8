@@ -12,14 +12,6 @@ use Lmo\LaravelDm8\Dm8ReservedWords;
 class DmGrammar extends Grammar
 {
     use Dm8ReservedWords;
-
-    /**
-     * The keyword identifier wrapper format.
-     *
-     * @var string
-     */
-    protected $wrapper = '%s';
-
     /**
      * The possible column modifiers.
      *
@@ -71,7 +63,7 @@ class DmGrammar extends Grammar
 
         $sql .= ' )';
 
-        echo 'SQL: ' . $sql . "\n";
+        // echo 'SQL: ' . $sql . "\n";
 
         return $sql;
     }
@@ -87,29 +79,46 @@ class DmGrammar extends Grammar
         return $this->getSchemaPrefix().parent::wrapTable($table);
     }
 
-    public function wrap($value, $prefixAlias = false)
-    {
-        $r = $this->wrap2(
-            $value instanceof Fluent ? $value->name : $value,
-            $prefixAlias
-        );
-        return '"' . trim($r, '"') . '"';
-    }
+//    public function wrap($value, $prefixAlias = false)
+//    {
+//        $r = $this->wrap2(
+//            $value instanceof Fluent ? $value->name : $value,
+//            $prefixAlias
+//        );
+//        return '"' . trim($r, '"') . '"';
+//    }
+//
+//    public function wrap2($value, $prefixAlias = false)
+//    {
+//        if ($this->isExpression($value)) {
+//            return $this->getValue($value);
+//        }
+//
+//        // If the value being wrapped has a column alias we will need to separate out
+//        // the pieces so we can wrap each of the segments of the expression on it
+//        // own, and then joins them both back together with the "as" connector.
+//        if (strpos(strtolower($value), ' as ') !== false) {
+//            return $this->wrapAliasedValue($value, $prefixAlias);
+//        }
+//
+//        return $this->wrapSegments(explode('.', $value));
+//    }
 
-    public function wrap2($value, $prefixAlias = false)
+
+    /**
+     * Wrap a single string in keyword identifiers.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    protected function wrapValue($value)
     {
-        if ($this->isExpression($value)) {
-            return $this->getValue($value);
+        if ($this->isReserved($value)) {
+            // return parent::wrapValue($value);
+            return sprintf("`%s`", $value);
         }
 
-        // If the value being wrapped has a column alias we will need to separate out
-        // the pieces so we can wrap each of the segments of the expression on it
-        // own, and then joins them both back together with the "as" connector.
-        if (strpos(strtolower($value), ' as ') !== false) {
-            return $this->wrapAliasedValue($value, $prefixAlias);
-        }
-
-        return $this->wrapSegments(explode('.', $value));
+        return $value !== '*' ? sprintf("`%s`", $value) : $value;
     }
 
     /**
@@ -841,20 +850,5 @@ class DmGrammar extends Grammar
         if (in_array($column->type, $this->serials) && $column->autoIncrement) {
             $blueprint->primary($column->name);
         }
-    }
-
-    /**
-     * Wrap a single string in keyword identifiers.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    protected function wrapValue($value)
-    {
-        if ($this->isReserved($value)) {
-            return parent::wrapValue($value);
-        }
-
-        return $value !== '*' ? sprintf($this->wrapper, $value) : $value;
     }
 }
