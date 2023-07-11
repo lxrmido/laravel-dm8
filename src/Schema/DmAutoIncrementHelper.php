@@ -60,7 +60,7 @@ class DmAutoIncrementHelper
 
         // create trigger for auto increment work around
         $triggerName = $this->createObjectName($prefix, $table, $col, 'trg');
-echo "createAutoIncrementObjects: $sequenceName, $triggerName\n";
+        // echo "createAutoIncrementObjects: $sequenceName, $triggerName\n";
         $this->trigger->autoIncrement($prefix.$table, $col, $triggerName, $sequenceName);
     }
 

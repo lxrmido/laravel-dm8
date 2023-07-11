@@ -257,4 +257,15 @@ class DmSchemaManager extends AbstractSchemaManager
 
         return parent::dropTable($name);
     }
+
+    public function dropAllTablesAndSequences() {
+        $names = $this->listTableNames();
+        foreach ($names as $name) {
+            $this->dropTable($name);
+        }
+        $seqs = $this->listSequences();
+        foreach ($seqs as &$seq) {
+            $this->dropSequence($name);
+        }
+    }
 }
