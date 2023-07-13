@@ -299,7 +299,10 @@ class DmGrammar extends Grammar
 //    }
     public function compilePrimary(Blueprint $blueprint, Fluent $command)
     {
-        return "ALTER TABLE {$table} ADD CLUSTER PRIMARY KEY ($columns)";
+        $table = $this->wrapTable($blueprint);
+        $columns = $this->columnize($command->columns);
+        // return "ALTER TABLE {$table} ADD CLUSTER PRIMARY KEY ($columns)"; // 只能整型类型才能为CLUSTER
+        return "ALTER TABLE {$table} ADD PRIMARY KEY ($columns)";
     }
 
     /**
@@ -900,7 +903,8 @@ class DmGrammar extends Grammar
     {
         if (in_array($column->type, $this->serials) && $column->autoIncrement) {
             // $blueprint->primary($column->name);
-            return " AUTO_INCREMENT CLUSTER PRIMARY KEY";
+            // return " AUTO_INCREMENT CLUSTER PRIMARY KEY";
+            return " AUTO_INCREMENT PRIMARY KEY";
         }
     }
 
