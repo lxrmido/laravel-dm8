@@ -582,9 +582,9 @@ class DmGrammar extends Grammar
      *
      * @return string
      */
-    public function getDateFormat()
-    {
-        return 'Y-m-d H:i:s.u';
-    }
+//    public function getDateFormat()
+//    {
+//        return 'Y-m-d H:i:s.u';
+//    }
 
 }
