@@ -48,7 +48,7 @@ class Comment extends Grammar
         $table = $this->wrapValue($blueprint->getTable());
 
         if ($blueprint->comment != null) {
-            $this->connection->statement("comment on table {$table} is '{$blueprint->comment}'");
+            $this->connection->statement("COMMENT ON TABLE {$table} IS '{$blueprint->comment}'");
         }
     }
 
@@ -91,7 +91,7 @@ class Comment extends Grammar
         $table = $this->connection->getTablePrefix().$table;
         $column = $this->wrapValue($column);
 
-        $this->connection->statement("comment on column {$table}.{$column} is '{$comment}'");
+        $this->connection->statement("COMMENT ON COLUMN {$table}.{$column} IS '{$comment}'");
     }
 
     /**

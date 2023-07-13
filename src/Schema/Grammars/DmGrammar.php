@@ -4,6 +4,7 @@ namespace Lmo\LaravelDm8\Schema\Grammars;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Grammars\ChangeColumn;
 use Illuminate\Database\Schema\Grammars\Grammar;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
@@ -49,7 +50,7 @@ class DmGrammar extends Grammar
     {
         $columns = implode(', ', $this->getColumns($blueprint));
 
-        $sql = 'create table '.$this->wrapTable($blueprint)." ( $columns";
+        $sql = 'CREATE TABLE '.$this->wrapTable($blueprint)." ( $columns";
 
         /*
          * To be able to name the primary/foreign keys when the table is
@@ -59,7 +60,7 @@ class DmGrammar extends Grammar
          */
         $sql .= (string) $this->addForeignKeys($blueprint);
 
-        $sql .= (string) $this->addPrimaryKeys($blueprint);
+        // $sql .= (string) $this->addPrimaryKeys($blueprint);
 
         $sql .= ' )';
 
@@ -182,18 +183,19 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
      * @return string|null
      */
-    protected function addPrimaryKeys(Blueprint $blueprint)
-    {
-        $primary = $this->getCommandByName($blueprint, 'primary');
-
-        if (! is_null($primary)) {
-            $columns = $this->columnize($primary->columns);
-
-            return ", constraint {$primary->index} primary key ( {$columns} )";
-        }
-
-        return '';
-    }
+//    protected function addPrimaryKeys(Blueprint $blueprint)
+//    {
+//        $primary = $this->getCommandByName($blueprint, 'primary');
+//
+//        if (! is_null($primary)) {
+//            $columns = $this->columnize($primary->columns);
+//
+//            // return ", constraint {$primary->index} primary key ( {$columns} )";
+//            return ", ";
+//        }
+//
+//        return '';
+//    }
 
     /**
      * Compile the query to determine if a table exists.
@@ -228,11 +230,52 @@ class DmGrammar extends Grammar
     {
         $columns = implode(', ', $this->getColumns($blueprint));
 
-        $sql = 'alter table '.$this->wrapTable($blueprint)." add ( $columns";
+        // $sql = 'alter table '.$this->wrapTable($blueprint)." add ( $columns";
+        // $sql .= (string) $this->addPrimaryKeys($blueprint);
 
-        $sql .= (string) $this->addPrimaryKeys($blueprint);
+        return 'ALTER TABLE '.$this->wrapTable($blueprint)." ADD COLUMN ( $columns )";
+    }
 
-        return $sql .= ' )';
+    /**
+     * Compile a change column command into a series of SQL statements.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @param  \Illuminate\Database\Connection  $connection
+     * @return array
+     *
+     * @throws \RuntimeException
+     */
+    public function compileChange(Blueprint $blueprint, Fluent $command, Connection $connection)
+    {
+        // return ChangeColumn::compile($this, $blueprint, $command, $connection);
+
+        $columns = implode(', ', $this->getColumnsForChange($blueprint));
+        $sql = "ALTER TABLE {$this->wrapTable($blueprint)} MODIFY ($columns)";
+
+        return [$sql];
+    }
+
+    /**
+     * Compile the blueprint's column definitions.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return array
+     */
+    protected function getColumnsForChange(Blueprint $blueprint)
+    {
+        $columns = [];
+
+        foreach ($blueprint->getChangedColumns() as $column) {
+            // Each of the column types have their own compiler functions which are tasked
+            // with turning the column definition into its SQL format for this platform
+            // used by the connection. The column's modifiers are compiled and added.
+            $sql = $this->wrap($column).' '.$this->getType($column);
+
+            $columns[] = $this->addModifiers($sql, $blueprint, $column);
+        }
+
+        return $columns;
     }
 
     /**
@@ -242,17 +285,21 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Support\Fluent  $command
      * @return string
      */
+//    public function compilePrimary(Blueprint $blueprint, Fluent $command)
+//    {
+//        $create = $this->getCommandByName($blueprint, 'create');
+//
+//        if (is_null($create)) {
+//            $columns = $this->columnize($command->columns);
+//
+//            $table = $this->wrapTable($blueprint);
+//
+//             return "alter table {$table} add constraint {$command->index} primary key ({$columns})";
+//        }
+//    }
     public function compilePrimary(Blueprint $blueprint, Fluent $command)
     {
-        $create = $this->getCommandByName($blueprint, 'create');
-
-        if (is_null($create)) {
-            $columns = $this->columnize($command->columns);
-
-            $table = $this->wrapTable($blueprint);
-
-            return "alter table {$table} add constraint {$command->index} primary key ({$columns})";
-        }
+        return "ALTER TABLE {$table} ADD CLUSTER PRIMARY KEY ($columns)";
     }
 
     /**
@@ -322,7 +369,20 @@ class DmGrammar extends Grammar
      */
     public function compileIndex(Blueprint $blueprint, Fluent $command)
     {
-        return "create index {$command->index} on ".$this->wrapTable($blueprint).' ( '.$this->columnize($command->columns).' )';
+        return "CREATE INDEX {$command->index} ON ".$this->wrapTable($blueprint).' ( '.$this->columnize($command->columns).' )';
+    }
+
+    /**
+     * Compile a drop index command.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @return string
+     */
+    public function compileDropIndex(Blueprint $blueprint, Fluent $command)
+    {
+        // return $this->dropConstraint($blueprint, $command, 'index');
+        return "DROP INDEX {$command->index}";
     }
 
     /**
@@ -334,7 +394,7 @@ class DmGrammar extends Grammar
      */
     public function compileDrop(Blueprint $blueprint, Fluent $command)
     {
-        return 'drop table '.$this->wrapTable($blueprint);
+        return 'DROP TABLE '.$this->wrapTable($blueprint);
     }
 
     /**
@@ -367,13 +427,15 @@ class DmGrammar extends Grammar
     {
         $table = $this->wrapTable($blueprint);
 
-        return "declare c int;
-            begin
-               select count(*) into c from user_tables where table_name = '$table';
-               if c = 1 then
-                  execute immediate 'drop table $table';
-               end if;
-            end;";
+//        return "declare c int;
+//            begin
+//               select count(*) into c from user_tables where table_name = '$table';
+//               if c = 1 then
+//                  execute immediate 'drop table $table';
+//               end if;
+//            end;";
+
+        return "DROP TABLE IF EXISTS $table";
     }
 
     /**
@@ -389,7 +451,8 @@ class DmGrammar extends Grammar
 
         $table = $this->wrapTable($blueprint);
 
-        return 'alter table '.$table.' drop ( '.implode(', ', $columns).' )';
+        // return 'alter table '.$table.' drop ( '.implode(', ', $columns).' )';
+        return 'ALTER TABLE '.$table.' DROP ( '.implode(', ', $columns).' )';
     }
 
     /**
@@ -432,18 +495,6 @@ class DmGrammar extends Grammar
     public function compileDropUnique(Blueprint $blueprint, Fluent $command)
     {
         return $this->dropConstraint($blueprint, $command, 'unique');
-    }
-
-    /**
-     * Compile a drop index command.
-     *
-     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
-     * @param  \Illuminate\Support\Fluent  $command
-     * @return string
-     */
-    public function compileDropIndex(Blueprint $blueprint, Fluent $command)
-    {
-        return $this->dropConstraint($blueprint, $command, 'index');
     }
 
     /**
@@ -531,7 +582,7 @@ class DmGrammar extends Grammar
      */
     protected function typeText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -542,7 +593,7 @@ class DmGrammar extends Grammar
      */
     protected function typeMediumText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -553,7 +604,7 @@ class DmGrammar extends Grammar
      */
     protected function typeLongText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -719,7 +770,7 @@ class DmGrammar extends Grammar
      */
     protected function typeTimestamp(Fluent $column)
     {
-        return 'timestamp';
+        return 'timestamp(0)';
     }
 
     /**
@@ -848,7 +899,15 @@ class DmGrammar extends Grammar
     protected function modifyIncrement(Blueprint $blueprint, Fluent $column)
     {
         if (in_array($column->type, $this->serials) && $column->autoIncrement) {
-            $blueprint->primary($column->name);
+            // $blueprint->primary($column->name);
+            return " AUTO_INCREMENT CLUSTER PRIMARY KEY";
         }
     }
+
+//    public function isCreatingTable(Blueprint $blueprint) : bool
+//    {
+//        $create = $this->getCommandByName($blueprint, 'create');
+//
+//        return (bool)$create;
+//    }
 }

@@ -48,7 +48,7 @@ class DmBuilder extends Builder
 
         $this->comment->setComments($blueprint);
 
-        $this->helper->createAutoIncrementObjects($blueprint, $table);
+        //$this->helper->createAutoIncrementObjects($blueprint, $table);
     }
 
     /**
@@ -81,7 +81,7 @@ class DmBuilder extends Builder
 
         foreach ($blueprint->getCommands() as $command) {
             if ($command->get('name') == 'drop') {
-                $this->helper->dropAutoIncrementObjects($table);
+                //$this->helper->dropAutoIncrementObjects($table);
             }
         }
 
@@ -94,11 +94,11 @@ class DmBuilder extends Builder
      * Drop a table from the schema.
      *
      * @param  string  $table
-     * @return \Illuminate\Database\Schema\Blueprint
+     * @return void
      */
     public function drop($table)
     {
-        $this->helper->dropAutoIncrementObjects($table);
+        // $this->helper->dropAutoIncrementObjects($table);
         parent::drop($table);
     }
 
@@ -113,16 +113,16 @@ class DmBuilder extends Builder
     }
 
     /**
-     * Indicate that the table should be dropped if it exists.
+     * Drop a table from the schema if it exists.
      *
      * @param  string  $table
-     * @return \Illuminate\Support\Fluent
+     * @return void
      */
-    public function dropIfExists($table)
-    {
-        $this->helper->dropAutoIncrementObjects($table);
-        parent::dropIfExists($table);
-    }
+//    public function dropIfExists($table)
+//    {
+//        // $this->helper->dropAutoIncrementObjects($table);
+//        // parent::dropIfExists($table);
+//    }
 
     /**
      * Determine if the given table exists.
