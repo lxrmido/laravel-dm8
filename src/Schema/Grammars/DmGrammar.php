@@ -710,7 +710,7 @@ class DmGrammar extends Grammar
      */
     protected function typeTimestamp(Fluent $column)
     {
-        return 'timestamp';
+        return 'timestamp(0)';
     }
 
     /**
