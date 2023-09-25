@@ -37,7 +37,7 @@ class Trigger
         if (! $table || ! $column || ! $triggerName || ! $sequenceName) {
             return false;
         }
-echo "AutoIncrement: $table, $column, $triggerName, $sequenceName\n";
+// echo "AutoIncrement: $table, $column, $triggerName, $sequenceName\n";
 
         if ($this->connection->getConfig('prefix_schema')) {
             $table = $this->connection->getConfig('prefix_schema').'.'.$table;
