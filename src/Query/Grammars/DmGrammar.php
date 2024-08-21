@@ -100,6 +100,12 @@ class DmGrammar extends Grammar
         return $sql;
     }
 
+    protected function wrapUnion($sql)
+    {
+        return '('.$sql.')';
+    }
+
+
     /**
      * @param  Builder  $query
      * @param  array  $components
