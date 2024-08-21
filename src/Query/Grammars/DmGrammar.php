@@ -91,9 +91,6 @@ class DmGrammar extends Grammar
         //    return $this->compileAnsiOffset($query, $components);
         //}
 
-        if ($query->unions) {
-            $sql = $this->wrapUnion($sql).' '.$this->compileUnions($query);
-        }
 
         $query->columns = $original;
 
