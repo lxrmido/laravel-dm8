@@ -52,11 +52,7 @@ class Sequence
      */
     public function wrap($name)
     {
-        if ($this->connection->getConfig('prefix_schema')) {
-            return $this->connection->getConfig('prefix_schema').'.'.$name;
-        }
-
-        return $name;
+        return $this->connection->getSchemaGrammar()->wrapTable($name, '');
     }
 
     /**
@@ -72,7 +68,7 @@ class Sequence
             return false;
         }
 
-        $name = $this->wrap($name);
+        $name = str_replace("'", "''", $this->wrap($name));
 
         return $this->connection->statement("
             declare
@@ -98,10 +94,10 @@ class Sequence
             return false;
         }
 
-        $name = $this->wrap($name);
+        [$schema, $name] = $this->connection->getSchemaBuilder()->parseSchemaAndTable($name, true);
 
-        return $this->connection->selectOne(
-            "select * from all_sequences where sequence_name='{$name}' and sequence_owner=user"
+        return (bool) $this->connection->selectOne(
+            'select 1 from all_sequences where sequence_name = ? and sequence_owner = ?', [$name, $schema]
         );
     }
 

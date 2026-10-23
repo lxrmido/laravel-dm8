@@ -2,190 +2,102 @@
 
 namespace Lmo\LaravelDm8\Query\Processors;
 
-use DateTime;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
 use PDO;
 
 class DmProcessor extends Processor
 {
-    /**
-     * Process an "insert get ID" query.
-     *
-     * @param  Builder  $query
-     * @param  string  $sql
-     * @param  array  $values
-     * @param  string  $sequence
-     * @return int
-     */
     public function processInsertGetId(Builder $query, $sql, $values, $sequence = null)
     {
-        $connection = $query->getConnection();
-
-        // $connection->recordsHaveBeenModified();
-        $start = microtime(true);
-
-        $id = 0;
-        $parameter = 1;
-        $statement = $this->prepareStatement($query, $sql);
-        $values = $this->incrementBySequence($values, $sequence);
-        $parameter = $this->bindValues($values, $statement, $parameter);
-        $statement->bindParam($parameter, $id, PDO::PARAM_INT, -1);
-        $statement->execute();
-
-        $connection->logQuery($sql, $values, $start);
-
-        return (int) $id;
+        return $this->executeReturning($query, $sql, $values, []);
     }
 
-    /**
-     * Get prepared statement.
-     *
-     * @param  Builder  $query
-     * @param  string  $sql
-     * @return \PDOStatement|Statement
-     */
-    private function prepareStatement(Builder $query, $sql)
+    public function saveLob(Builder $query, $sql, array $values, array $binaries, array $whereBindings = [])
     {
-        /** @var Oci8Connection $connection */
-        $connection = $query->getConnection();
-        $pdo = $connection->getPdo();
-
-        return $pdo->prepare($sql);
+        return $this->executeReturning($query, $sql, $values, $binaries, $whereBindings);
     }
 
-    /**
-     * Insert a new record and get the value of the primary key.
-     *
-     * @param  array  $values
-     * @param  string  $sequence
-     * @return array
-     */
-    protected function incrementBySequence(array $values, $sequence)
+    private function executeReturning(Builder $query, string $sql, array $values, array $binaries, array $whereBindings = []): int
     {
-        $builder = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[3]['object'];
-        $builderArgs = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[2]['args'];
+        $connection = $query->getConnection();
+        $binaryOffset = count($values);
+        $bindings = array_merge($values, $binaries, $whereBindings);
 
-        if (! isset($builderArgs[1][0][$sequence])) {
-            if ($builder instanceof EloquentBuilder) {
-                /** @var DmEloquent $model */
-                $model = $builder->getModel();
-                /** @var Dm8Connection $connection */
-                $connection = $model->getConnection();
-                if ($model->sequence && $model->incrementing) {
-                    $values[] = (int) $connection->getSequence()->nextValue($model->sequence);
-                }
+        return $connection->runReturning($sql, $bindings, function ($connection, $sql, $values) use ($binaries, $binaryOffset) {
+            $statement = $connection->getPdo()->prepare($sql);
+            $connection->bindValues($statement, $values);
+            $parameter = count($values) + 1;
+            foreach ($binaries as $offset => $binary) {
+                $statement->bindValue($binaryOffset + $offset + 1, $binary, PDO::PARAM_LOB);
             }
-        }
 
-        return $values;
+            $id = 0;
+            $statement->bindParam($parameter, $id, PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT, 20);
+            $statement->execute();
+            $connection->recordsHaveBeenModified();
+
+            return (int) $id;
+        });
     }
 
-    /**
-     * Bind values to PDO statement.
-     *
-     * @param  array  $values
-     * @param  \PDOStatement  $statement
-     * @param  int  $parameter
-     * @return int
-     */
-    private function bindValues(&$values, $statement, $parameter)
+    public function processColumns($results)
     {
-        $count = count($values);
-        for ($i = 0; $i < $count; $i++) {
-            if (is_object($values[$i])) {
-                if ($values[$i] instanceof DateTime) {
-                    $values[$i] = $values[$i]->format('Y-m-d H:i:s');
-                } else {
-                    $values[$i] = (string) $values[$i];
-                }
+        return array_map(static function ($result) {
+            $column = array_change_key_case((array) $result);
+            $type = strtolower($column['data_type']);
+            $definition = $type;
+            if (in_array($type, ['varchar', 'varchar2', 'nvarchar', 'nvarchar2', 'char'])) {
+                $definition .= '('.$column['char_length'].')';
+            } elseif ($column['data_precision'] !== null) {
+                $definition .= '('.$column['data_precision'].', '.($column['data_scale'] ?? 0).')';
             }
-            $type = $this->getPdoType($values[$i]);
-            $statement->bindParam($parameter, $values[$i], $type);
-            $parameter++;
-        }
 
-        return $parameter;
+            return [
+                'name' => $column['column_name'],
+                'type_name' => $type,
+                'type' => $definition,
+                'collation' => null,
+                'nullable' => $column['nullable'] === 'Y',
+                'default' => $column['data_default'],
+                'auto_increment' => (bool) ($column['auto_increment'] ?? false),
+                'comment' => $column['comments'] ?? null,
+                'generation' => null,
+            ];
+        }, $results);
     }
 
-    /**
-     * Get PDO Type depending on value.
-     *
-     * @param  mixed  $value
-     * @return int
-     */
-    private function getPdoType($value)
+    public function processIndexes($results)
     {
-        if (is_int($value)) {
-            return PDO::PARAM_INT;
+        $indexes = [];
+        foreach ($results as $result) {
+            $row = array_change_key_case((array) $result);
+            $key = $row['index_name'];
+            $indexes[$key] ??= [
+                'name' => $key, 'columns' => [], 'type' => strtolower($row['index_type']),
+                'unique' => $row['uniqueness'] === 'UNIQUE', 'primary' => $row['is_primary'] === 'Y',
+            ];
+            $indexes[$key]['columns'][] = $row['column_name'];
         }
 
-        if (is_bool($value)) {
-            return PDO::PARAM_BOOL;
-        }
-
-        if (is_null($value)) {
-            return PDO::PARAM_NULL;
-        }
-
-        return PDO::PARAM_STR;
+        return array_values($indexes);
     }
 
-    /**
-     * Save Query with Blob returning primary key value.
-     *
-     * @param  Builder  $query
-     * @param  string  $sql
-     * @param  array  $values
-     * @param  array  $binaries
-     * @return int
-     */
-    public function saveLob(Builder $query, $sql, array $values, array $binaries)
+    public function processForeignKeys($results)
     {
-        $connection = $query->getConnection();
-
-        // $connection->recordsHaveBeenModified();
-        $start = microtime(true);
-
-        $id = 0;
-        $parameter = 1;
-        $statement = $this->prepareStatement($query, $sql);
-
-        $parameter = $this->bindValues($values, $statement, $parameter);
-
-        $countBinary = count($binaries);
-        for ($i = 0; $i < $countBinary; $i++) {
-            $statement->bindParam($parameter, $binaries[$i], PDO::PARAM_LOB, -1);
-            $parameter++;
+        $keys = [];
+        foreach ($results as $result) {
+            $row = array_change_key_case((array) $result);
+            $key = $row['constraint_name'];
+            $keys[$key] ??= [
+                'name' => $key, 'columns' => [], 'foreign_schema' => $row['foreign_schema'],
+                'foreign_table' => $row['foreign_table'], 'foreign_columns' => [],
+                'on_update' => 'no action', 'on_delete' => strtolower($row['delete_rule']),
+            ];
+            $keys[$key]['columns'][] = $row['column_name'];
+            $keys[$key]['foreign_columns'][] = $row['foreign_column'];
         }
 
-        // bind output param for the returning clause.
-        $statement->bindParam($parameter, $id, PDO::PARAM_INT, -1);
-
-        if (! $statement->execute()) {
-            return false;
-        }
-
-        $connection->logQuery($sql, $values, $start);
-
-        return (int) $id;
-    }
-
-    /**
-     * Process the results of a column listing query.
-     *
-     * @param  array  $results
-     * @return array
-     */
-    public function processColumnListing($results)
-    {
-        $mapping = function ($r) {
-            $r = (object) $r;
-
-            return strtolower($r->column_name);
-        };
-
-        return array_map($mapping, $results);
+        return array_values($keys);
     }
 }

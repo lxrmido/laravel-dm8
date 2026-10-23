@@ -92,7 +92,7 @@ class DmEloquent extends Model
         // If dirty attributes contains binary field
         // extract binary fields to new array
         if ($this->extractBinaries($attributes)) {
-            return $this->newQuery()->updateLob($attributes, $this->binaryFields, $this->getKeyName());
+            return $this->fill(array_merge($attributes, $this->binaryFields))->save($options);
         }
 
         return $this->fill($attributes)->save($options);
@@ -109,7 +109,7 @@ class DmEloquent extends Model
         // If attributes contains binary field
         // extract binary fields to new array
         $binaries = [];
-        if ($this->checkBinary($attributes) && $this->getConnection() instanceof Oci8Connection) {
+        if ($this->checkBinary($attributes) && $this->getConnection() instanceof Dm8Connection) {
             foreach ($attributes as $key => $value) {
                 if (in_array($key, $this->binaries)) {
                     $binaries[$key] = $value;
@@ -200,12 +200,15 @@ class DmEloquent extends Model
         // Once we have run the update operation, we will fire the "updated" event for
         // this model instance. This will allow developers to hook into these after
         // models are updated, giving them a chance to do any special processing.
-        $dirty = $this->getDirty();
+        $dirty = $this->getDirtyForUpdate();
 
         if (count($dirty) > 0) {
             // If dirty attributes contains binary field
             // extract binary fields to new array
             $this->updateBinary($query, $dirty);
+
+            $this->refreshSavedAttributes();
+            $this->syncChanges();
 
             $this->fireModelEvent('updated', false);
         }
@@ -238,6 +241,9 @@ class DmEloquent extends Model
      */
     protected function performInsert(Builder $query)
     {
+        if ($this->usesUniqueIds()) {
+            $this->setUniqueIds();
+        }
         if ($this->fireModelEvent('creating') === false) {
             return false;
         }
@@ -252,7 +258,7 @@ class DmEloquent extends Model
         // If the model has an incrementing key, we can use the "insertGetId" method on
         // the query builder, which will give us back the final inserted ID for this
         // table from the database. Not all tables have to be incrementing though.
-        $attributes = $this->attributes;
+        $attributes = $this->getAttributesForInsert();
 
         if ($this->getIncrementing()) {
             $this->insertAndSetId($query, $attributes);
@@ -282,6 +288,8 @@ class DmEloquent extends Model
 
         $this->wasRecentlyCreated = true;
 
+        $this->refreshSavedAttributes();
+
         $this->fireModelEvent('created', false);
 
         return true;
@@ -296,6 +304,9 @@ class DmEloquent extends Model
      */
     protected function insertAndSetId(Builder $query, $attributes)
     {
+        if ($this->sequence && ! isset($attributes[$this->getKeyName()])) {
+            $attributes[$this->getKeyName()] = $this->getConnection()->getSequence()->nextValue($this->sequence);
+        }
         $id = ($binaries = $this->extractBinaries($attributes)) ?
             $query->getQuery()->insertLob($attributes, $binaries, $keyName = $this->getKeyName()) :
             $query->insertGetId($attributes, $keyName = $this->getKeyName());

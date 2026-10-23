@@ -4,7 +4,6 @@ namespace Lmo\LaravelDm8\Connectors;
 
 use Illuminate\Database\Connectors\Connector;
 use Illuminate\Database\Connectors\ConnectorInterface;
-use Illuminate\Support\Arr;
 use PDO;
 
 class DmConnector extends Connector implements ConnectorInterface
@@ -15,7 +14,7 @@ class DmConnector extends Connector implements ConnectorInterface
      * @var array
      */
     protected $options = [
-        PDO::CASE_LOWER               => PDO::CASE_LOWER,
+        PDO::ATTR_CASE               => PDO::CASE_LOWER,
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_ORACLE_NULLS       => PDO::NULL_NATURAL,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
@@ -29,6 +28,9 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     public function connect(array $config)
     {
+        if (! empty($config['dynamic'])) {
+            call_user_func_array($config['dynamic'], [&$config]);
+        }
         $tns = ! empty($config['tns']) ? $config['tns'] : $this->getDsn($config);
 
         $options = $this->getOptions($config);
@@ -81,7 +83,7 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     protected function setHost(array $config)
     {
-        $config['host'] = isset($config['host']) ? $config['host'] : $config['hostname'];
+        $config['host'] = $config['host'] ?? $config['hostname'] ?? '127.0.0.1';
 
         return $config;
     }
@@ -94,7 +96,7 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     private function setPort(array $config)
     {
-        $config['port'] = isset($config['port']) ? $config['port'] : '1521';
+        $config['port'] = $config['port'] ?? '5236';
 
         return $config;
     }
@@ -137,13 +139,10 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     public function createConnection($tns, array $config, array $options)
     {
-        // add fallback in case driver is not set, will use pdo instead
-        if (! in_array($config['driver'], ['dm'])) {
-            return parent::createConnection($tns, $config, $options);
-        }
+        // Keep the vendor-specific charset option, but do not pass our retry list to PDO.
+        $options['charset'] = $options['charset'] ?? $config['charset'] ?? 'UTF8';
+        unset($options['reconnect_errors']);
 
-        $config = $this->setCharset($config);
-        $options['charset'] = $config['charset'];
-        return new PDO($tns, $config['username'], $config['password'], $options);
+        return parent::createConnection($tns, $config, $options);
     }
 }

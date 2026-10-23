@@ -2,8 +2,6 @@
 
 namespace Lmo\LaravelDm8;
 
-use Doctrine\DBAL\Driver\OCI8\Driver as DoctrineDriver;
-use Doctrine\DBAL\Version;
 use Exception;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Grammar;
@@ -11,7 +9,6 @@ use Illuminate\Support\Str;
 use PDO;
 use PDOStatement;
 use Throwable;
-use Lmo\LaravelDm8\DBAL\DmDriver;
 use Lmo\LaravelDm8\Query\Grammars\DmGrammar as QueryGrammar;
 use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
 use Lmo\LaravelDm8\Query\Processors\DmProcessor as Processor;
@@ -19,7 +16,6 @@ use Lmo\LaravelDm8\Schema\Grammars\DmGrammar as SchemaGrammar;
 use Lmo\LaravelDm8\Schema\DmBuilder as SchemaBuilder;
 use Lmo\LaravelDm8\Schema\Sequence;
 use Lmo\LaravelDm8\Schema\Trigger;
-use LaravelDm8\DBAL\Dm8\Statement;
 
 class Dm8Connection extends Connection
 {
@@ -83,10 +79,15 @@ class Dm8Connection extends Connection
     {
         $vars = [];
         foreach ($sessionVars as $option => $value) {
+            if (! preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $option)) {
+                throw new \InvalidArgumentException('Invalid session option name.');
+            }
             if (strtoupper($option) == 'CURRENT_SCHEMA' || strtoupper($option) == 'EDITION') {
-                $vars[] = "$option  = $value";
+                $value = $this->getSchemaGrammar()->wrap($value);
+                $vars[] = "$option = $value";
             } else {
-                $vars[] = "$option  = '$value'";
+                $value = str_replace("'", "''", $value);
+                $vars[] = "$option = '$value'";
             }
         }
 
@@ -196,15 +197,10 @@ class Dm8Connection extends Connection
         return $this->setSessionVars($sessionVars);
     }
 
-    /**
-     * Get doctrine driver.
-     *
-     * @return Oci8Driver
-     */
-    protected function getDoctrineDriver()
+    /** Get the driver title for Laravel's database tools. */
+    public function getDriverTitle()
     {
-        // return class_exists(Version::class) ? new DoctrineDriver : new DmDriver();
-        return new DmDriver();
+        return 'Dameng';
     }
 
     /**
@@ -224,7 +220,7 @@ class Dm8Connection extends Connection
 
         $stmt = $this->addBindingsToStatement($stmt, $bindings);
 
-        $stmt->bindParam(':result', $result, $returnType, $length);
+        $stmt->bindParam(':result', $result, $returnType, $length ?? 0);
         $stmt->execute();
 
         return $result;
@@ -273,7 +269,10 @@ class Dm8Connection extends Connection
         $stmt->bindParam($cursorName, $cursor, PDO::PARAM_STMT);
         $stmt->execute();
 
-        $statement = new Statement($cursor, $this->getPdo(), $this->getPdo()->getOptions());
+        if (! $cursor instanceof PDOStatement) {
+            throw new \RuntimeException('The PDO dm driver must return a PDOStatement for an output cursor.');
+        }
+        $statement = $cursor;
         $statement->execute();
         $results = $statement->fetchAll(PDO::FETCH_OBJ);
         $statement->closeCursor();
@@ -339,7 +338,7 @@ class Dm8Connection extends Connection
      */
     protected function getDefaultQueryGrammar()
     {
-        return $this->withTablePrefix(new QueryGrammar());
+        return $this->withSchemaPrefix(new QueryGrammar($this));
     }
 
     /**
@@ -350,7 +349,7 @@ class Dm8Connection extends Connection
      */
     public function withTablePrefix(Grammar $grammar)
     {
-        return $this->withSchemaPrefix(parent::withTablePrefix($grammar));
+        return $this->withSchemaPrefix($grammar);
     }
 
     /**
@@ -383,7 +382,7 @@ class Dm8Connection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar());
+        return $this->withSchemaPrefix(new SchemaGrammar($this));
     }
 
     /**
@@ -428,7 +427,7 @@ class Dm8Connection extends Connection
      * @param  \Exception  $e
      * @return bool
      */
-    protected function causedByLostConnection(Throwable $e)
+    public function causedByLostConnection(Throwable $e)
     {
         if (parent::causedByLostConnection($e)) {
             return true;
@@ -490,7 +489,26 @@ class Dm8Connection extends Connection
     public function bindValues($statement, $bindings)
     {
         foreach ($bindings as $key => $value) {
-            $statement->bindValue(is_string($key) ? $key : $key + 1, $value);
+            $type = match (true) {
+                $value === null => PDO::PARAM_NULL,
+                is_int($value) => PDO::PARAM_INT,
+                is_bool($value) => PDO::PARAM_BOOL,
+                is_resource($value) => PDO::PARAM_LOB,
+                default => PDO::PARAM_STR,
+            };
+            $statement->bindValue(is_string($key) ? $key : $key + 1, $value, $type);
         }
+    }
+
+    /** Execute RETURNING through Laravel's logging, retry and binding pipeline. */
+    public function runReturning($sql, array $bindings, \Closure $callback)
+    {
+        return $this->run($sql, $bindings, function ($sql, $bindings) use ($callback) {
+            if ($this->pretending()) {
+                return 0;
+            }
+
+            return $callback($this, $sql, $this->prepareBindings($bindings));
+        });
     }
 }

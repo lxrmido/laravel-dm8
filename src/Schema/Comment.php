@@ -20,7 +20,7 @@ class Comment extends Grammar
      */
     public function __construct(Connection $connection)
     {
-        $this->connection = $connection;
+        parent::__construct($connection);
     }
 
     /**
@@ -45,10 +45,11 @@ class Comment extends Grammar
      */
     private function commentTable(DmBlueprint $blueprint)
     {
-        $table = $this->wrapValue($blueprint->getTable());
+        $table = $this->connection->getSchemaGrammar()->wrapTable($blueprint->getTable());
 
         if ($blueprint->comment != null) {
-            $this->connection->statement("comment on table {$table} is '{$blueprint->comment}'");
+            $comment = str_replace("'", "''", $blueprint->comment);
+            $this->connection->statement("comment on table {$table} is '{$comment}'");
         }
     }
 
@@ -87,9 +88,9 @@ class Comment extends Grammar
      */
     private function commentColumn($table, $column, $comment)
     {
-        $table = $this->wrapValue($table);
-        $table = $this->connection->getTablePrefix().$table;
-        $column = $this->wrapValue($column);
+        $table = $this->connection->getSchemaGrammar()->wrapTable($table);
+        $column = $this->connection->getSchemaGrammar()->wrap($column);
+        $comment = str_replace("'", "''", $comment);
 
         $this->connection->statement("comment on column {$table}.{$column} is '{$comment}'");
     }

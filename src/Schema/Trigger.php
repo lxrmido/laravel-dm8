@@ -39,14 +39,11 @@ class Trigger
         }
 // echo "AutoIncrement: $table, $column, $triggerName, $sequenceName\n";
 
-        if ($this->connection->getConfig('prefix_schema')) {
-            $table = $this->connection->getConfig('prefix_schema').'.'.$table;
-            $triggerName = $this->connection->getConfig('prefix_schema').'.'.$triggerName;
-            $sequenceName = $this->connection->getConfig('prefix_schema').'.'.$sequenceName;
-        }
-
-        $table = $this->wrapValue($table);
-        $column = $this->wrapValue($column);
+        $grammar = $this->connection->getSchemaGrammar();
+        $table = $grammar->wrapTable($table, '');
+        $triggerName = $grammar->wrapTable($triggerName, '');
+        $sequenceName = $grammar->wrapTable($sequenceName, '');
+        $column = $grammar->wrap($column);
 
         return $this->connection->statement("
             create trigger $triggerName
@@ -81,6 +78,8 @@ class Trigger
         if (! $name) {
             return false;
         }
+
+        $name = str_replace("'", "''", $this->connection->getSchemaGrammar()->wrapTable($name, ''));
 
         return $this->connection->statement("declare
                 e exception;

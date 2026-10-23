@@ -3,9 +3,7 @@
 namespace Lmo\LaravelDm8;
 
 use Illuminate\Database\Connection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
-use Lmo\LaravelDm8\Auth\OracleUserProvider;
 use Lmo\LaravelDm8\Connectors\DmConnector as Connector;
 
 class Dm8ServiceProvider extends ServiceProvider
@@ -40,17 +38,9 @@ class Dm8ServiceProvider extends ServiceProvider
             $this->mergeConfigFrom(__DIR__.'/../config/dm.php', 'database.connections');
         }
 
-        Connection::resolverFor('dm', function ($connection, $database, $prefix, $config) {
-            if (isset($config['dynamic']) && ! empty($config['dynamic'])) {
-                call_user_func_array($config['dynamic'], [&$config]);
-            }
-
-            $connector = new Connector();
-            $connection = $connector->connect($config);
-            $db = new Dm8Connection($connection, $database, $prefix, $config);
-            
-            return $db;
-        });
+        $this->app->bind('db.connector.dm', Connector::class);
+        Connection::resolverFor('dm', static fn ($connection, $database, $prefix, $config) =>
+            new Dm8Connection($connection, $database, $prefix, $config));
     }
 
     /**

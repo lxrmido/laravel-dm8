@@ -58,10 +58,17 @@ class DmBuilder extends Builder
      * @param  Closure  $callback
      * @return \Illuminate\Database\Schema\Blueprint
      */
-    protected function createBlueprint($table, Closure $callback = null)
+    protected function createBlueprint($table, ?Closure $callback = null)
     {
-        $blueprint = new DmBlueprint($table, $callback);
+        if (isset($this->resolver)) {
+            return ($this->resolver)($this->connection, $table, $callback);
+        }
+
+        $blueprint = new DmBlueprint($this->connection, $table);
         $blueprint->setTablePrefix($this->connection->getTablePrefix());
+        if ($callback !== null) {
+            $callback($blueprint);
+        }
 
         return $blueprint;
     }
@@ -132,16 +139,12 @@ class DmBuilder extends Builder
      */
     public function hasTable($table)
     {
-        $grammar = $this->grammar;
-        $sql = $grammar->compileTableExists();
-
-        $database = $this->connection->getConfig('username');
-        if ($this->connection->getConfig('prefix_schema')) {
-            $database = $this->connection->getConfig('prefix_schema');
-        }
+        [$database, $table] = $this->parseSchemaAndTable($table, true);
         $table = $this->connection->getTablePrefix().$table;
 
-        return count($this->connection->select($sql, [$database, $table])) > 0;
+        return count($this->connection->selectFromWriteConnection(
+            $this->grammar->compileTableExists($database, $table)
+        )) > 0;
     }
 
     /**
@@ -152,11 +155,16 @@ class DmBuilder extends Builder
      */
     public function getColumnListing($table)
     {
-        $database = $this->connection->getConfig('username');
-        $table = $this->connection->getTablePrefix().$table;
-        $grammar = $this->grammar;
-        $results = $this->connection->select($grammar->compileColumnExists($database, $table));
+        return parent::getColumnListing($table);
+    }
 
-        return $this->connection->getPostProcessor()->processColumnListing($results);
+    public function getCurrentSchemaListing()
+    {
+        return [$this->connection->getConfig('prefix_schema') ?: $this->connection->getConfig('username')];
+    }
+
+    public function parseSchemaAndTable($reference, $withDefaultSchema = null)
+    {
+        return parent::parseSchemaAndTable($reference, $withDefaultSchema ?? true);
     }
 }

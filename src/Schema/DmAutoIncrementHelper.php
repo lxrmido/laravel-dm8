@@ -133,16 +133,17 @@ class DmAutoIncrementHelper
             return '';
         }
 
+        [$schema, $table] = $this->connection->getSchemaBuilder()->parseSchemaAndTable($table, true);
         $sql = "SELECT cols.column_name
             FROM all_constraints cons, all_cons_columns cols
-            WHERE cols.table_name = '{$table}'
+            WHERE cols.table_name = ?
                 AND cons.constraint_type = 'P'
                 AND cons.constraint_name = cols.constraint_name
                 AND cons.owner = cols.owner
                 AND cols.position = 1
-                AND cons.owner = (select user from dual)
+                AND cons.owner = ?
             ORDER BY cols.table_name, cols.position";
-        $data = $this->connection->selectOne($sql);
+        $data = $this->connection->selectOne($sql, [$table, $schema]);
 
         if ($data) {
             return $data->column_name;

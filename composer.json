@@ -1,12 +1,24 @@
 {
     "name": "lmo/laravel-dm8",
+    "description": "Dameng 8 PDO adapter for Laravel 13",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-pdo": "*",
+        "illuminate/database": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "suggest": {
+        "ext-pdo_dm": "Required for connections to a Dameng server"
+    },
+    "require-dev": {
+        "laravel/framework": "^13.0",
+        "phpunit/phpunit": "^13.4"
+    },
     "autoload": {
         "psr-4": {
             "Lmo\\LaravelDm8\\": "src/"
-        },
-        "files": [
-            
-        ]
+        }
     },
     "authors": [
         {
@@ -16,12 +28,15 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-main": "1.0-dev"
+            "dev-release/laravel-13": "2.0-dev"
         },
         "laravel": {
             "providers": [
                 "Lmo\\LaravelDm8\\Dm8ServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "test": "@php vendor/bin/phpunit"
     }
 }
